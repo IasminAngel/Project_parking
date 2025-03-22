@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>Sistema Estacionamento</title>
+</head>
+<body>
+    <div class="container">
+        <div class="title"><h1>Sistema Estacionamento</h1></div>
+        <form action="/registrar_carro" method="post">
+            <!-- Campos do formulário -->
+            <div class="row">
+                <h4>Cadastrar Carros</h4>
+                <div class="input-group input-group-icon">
+                    <input type="text" id="placa" name="placa" placeholder="Placa" required />
+                    <div class="input-icon"><i class="fa-solid fa-car-rear"></i></div>
+                </div>
+                <div class="input-group input-group-icon">
+                    <input type="text" id="marca" name="marca" placeholder="Marca" required />
+                    <div class="input-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                </div>
+                <div class="input-group input-group-icon">
+                    <input type="text" id="modelo" name="modelo" placeholder="Modelo" required />
+                    <div class="input-icon"><i class="fa-solid fa-tags"></i></div>
+                </div>
+                <div class="input-group input-group-icon">
+                    <input type="number" id="ano" name="ano" placeholder="Ano" min="1900" max="2023" required />
+                    <div class="input-icon"><i class="fa-solid fa-calendar"></i></div>
+                </div>
+                <button type="submit">ENVIAR</button>
+            </div>
+
+            <!-- Outras opções -->
+            <div class="row">
+                <div class="col-half">
+                    <h4>Outras opções disponíveis:</h4>
+                    <div class="input-group radio-group">
+                        <input id="alterar" type="radio" name="opcao" value="alterar" />
+                        <label for="alterar">Alterar</label>
+                        <input id="remover" type="radio" name="opcao" value="remover" />
+                        <label for="remover">Remover</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações gerais -->
+            <div class="row">
+                <h4>Informações gerais:</h4>
+                <div class="input-group">
+                    <input id="exibir-carros" type="radio" name="opcoes-escolha" value="carros"  />
+                    <label for="exibir-carros">
+                        <span><i class="fa-solid fa-car"></i> Exibir carros registrados</span>
+                    </label>
+                    <input id="exibir-vagas" type="radio" name="opcoes-escolha" value="vagas" />
+                    <label for="exibir-vagas">
+                        <span><i class="fa-solid fa-map"></i> Exibir vagas disponíveis</span>
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
