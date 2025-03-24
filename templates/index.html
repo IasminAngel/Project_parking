@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/static/css/styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <title>Sistema Estacionamento</title>
 </head>
 <body>
     <div class="container">
         <div class="title"><h1>Sistema Estacionamento</h1></div>
         <form action="/registrar_carro" method="post">
-            <!-- Campos do formulário -->
+
             <div class="row">
                 <h4>Cadastrar Carros</h4>
                 <div class="input-group input-group-icon">
@@ -30,37 +30,68 @@
                     <input type="number" id="ano" name="ano" placeholder="Ano" min="1900" max="2023" required />
                     <div class="input-icon"><i class="fa-solid fa-calendar"></i></div>
                 </div>
-                <button type="submit">ENVIAR</button>
+                <button type="submit" class="btn-option">Enviar</button>
             </div>
 
-            <!-- Outras opções -->
             <div class="row">
                 <div class="col-half">
                     <h4>Outras opções disponíveis:</h4>
-                    <div class="input-group radio-group">
-                        <input id="alterar" type="radio" name="opcao" value="alterar" />
-                        <label for="alterar">Alterar</label>
-                        <input id="remover" type="radio" name="opcao" value="remover" />
-                        <label for="remover">Remover</label>
+                    <div class="button-group">
+                        <button id="alterar" class="btn-option">Alterar</button>
+                        <button id="remover" class="btn-option">Remover</button>
+                        <!-- CRIAR DELETE -->
                     </div>
                 </div>
             </div>
 
-            <!-- Informações gerais -->
             <div class="row">
                 <h4>Informações gerais:</h4>
-                <div class="input-group">
-                    <input id="exibir-carros" type="radio" name="opcoes-escolha" value="carros"  />
-                    <label for="exibir-carros">
+                <div class="button-group">
+                    <button id="exibir-carros" class="btn-option">
                         <span><i class="fa-solid fa-car"></i> Exibir carros registrados</span>
-                    </label>
-                    <input id="exibir-vagas" type="radio" name="opcoes-escolha" value="vagas" />
-                    <label for="exibir-vagas">
+                    </button>
+                    <button id="exibir-vagas" class="btn-option">
                         <span><i class="fa-solid fa-map"></i> Exibir vagas disponíveis</span>
-                    </label>
+                    </button>
                 </div>
             </div>
         </form>
+
+        <div id="tabelaCarros" style="display: none;">
+            <h4>Carros Registrados</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Placa</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Ano</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for carro in carros %}
+                    <tr>
+                        <td>{{ carro[1] }}</td>
+                        <td>{{ carro[2] }}</td>  
+                        <td>{{ carro[3] }}</td>  
+                        <td>{{ carro[4] }}</td> 
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+    
+    <script>
+        document.getElementById('exibir-carros').addEventListener('click', function(event) {
+            event.preventDefault(); 
+            var tabela = document.getElementById('tabelaCarros');
+            if (tabela.style.display === 'none') {
+                tabela.style.display = 'block';  
+            } else {
+                tabela.style.display = 'none';  
+            }
+        });
+    </script>
 </body>
 </html>

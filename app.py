@@ -48,7 +48,7 @@ def adicionar_carro():
             ano_atual = datetime.now().year
             if not (1900 <= ano <= ano_atual):
                 flash('Ano inválido! Digite um ano entre 1900 e o ano atual.', 'error')
-                return redirect(url_for('index'))  # Retorna uma resposta válida
+                return redirect(url_for('index')) 
 
             conectar = conectar_db()
             cursor = conectar.cursor()
@@ -63,17 +63,35 @@ def adicionar_carro():
             flash(f'Erro ao adicionar carro: {str(e)}', 'error')
     else:
         flash('Preencha todos os campos!', 'error')
-
-    # Retorna uma resposta válida em todos os casos
+        
     return redirect(url_for('index'))
 
-    
+@app.route('/exibir_carro', methods=['GET'])
+def exibir_carro():
+    conectar = conectar_db()
+    cursor = conectar.cursor()
 
-print(app.template_folder)
+    cursor.execute("SELECT * FROM carro")
+    carros = cursor.fetchall()  
+
+    conectar.close()
+
+    return render_template('index.html', carros=carros)
+
+@app.route('/deletar_carro', methods=['DEL'])
+def deletar_carro():
+    conectar = conectar_db()
+    cursor = conectar.cursor()
+
+    cursor.execute("DELETE FROM carro WHERE id = (?)';")
+    carros = cursor.fetchall()  
+
+    conectar.close()
+
+    return render_template('index.html', carros=carros)
+
 
 if __name__ == '__main__':
     criar_tabela()
     app.run(debug=True)
     
-
-# python app.py para startar
