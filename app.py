@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import sqlite3
 from datetime import datetime
 
@@ -78,28 +78,33 @@ def exibir_carro():
 
     return render_template('index.html', carros=carros)
 
-def deletar_carro():
+def deletar_carro(id_carro):
     try:
         conectar = conectar_db()
         cursor = conectar.cursor()
 
-        cursor.execute("DELETE FROM carro WHERE id = (?)';")
-        carros = cursor.fetchall()  
+        cursor.execute("DELETE FROM carro WHERE id = ?", (id_carro,))
+        conectar.commit()  
 
         conectar.close()
 
-        return "Dados excluídos com sucesso!"
+        return "Carro excluído com sucesso!"
 
     except Exception as e:
+        return f"Erro ao excluir carro: {e}"
 
-        return f"Erro ao excluir dados: {e}"
 
-    #return render_template('index.html', carros=carros)
-
-@app.route('/deletar_carro', methods=['DEL'])
+@app.route('/deletar_carro', methods=['DELETE'])
 def excluir():
-    mensagem = deletar_carro()
+    dados = request.get_json()
+    id_carro = dados.get('id')  
+
+    if not id_carro:
+        return jsonify({'mensagem': 'Erro: ID do carro não fornecido'}), 400
+
+    mensagem = deletar_carro(id_carro)
     return jsonify({'mensagem': mensagem})
+
 
 if __name__ == '__main__':
     criar_tabela()

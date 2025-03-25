@@ -1,110 +1,158 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/static/css/styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
     <title>Sistema Estacionamento</title>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="title"><h1>Sistema Estacionamento</h1></div>
-        <form action="/registrar_carro" method="post">
-
-            <div class="row">
-                <h4>Cadastrar Carros</h4>
-                <div class="input-group input-group-icon">
-                    <input type="text" id="placa" name="placa" placeholder="Placa" required />
-                    <div class="input-icon"><i class="fa-solid fa-car-rear"></i></div>
-                </div>
-                <div class="input-group input-group-icon">
-                    <input type="text" id="marca" name="marca" placeholder="Marca" required />
-                    <div class="input-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                </div>
-                <div class="input-group input-group-icon">
-                    <input type="text" id="modelo" name="modelo" placeholder="Modelo" required />
-                    <div class="input-icon"><i class="fa-solid fa-tags"></i></div>
-                </div>
-                <div class="input-group input-group-icon">
-                    <input type="number" id="ano" name="ano" placeholder="Ano" min="1900" max="2023" required />
-                    <div class="input-icon"><i class="fa-solid fa-calendar"></i></div>
-                </div>
-                <button type="submit" class="btn-option">Enviar</button>
+      <div class="title"><h1>Sistema Estacionamento</h1></div>
+      <form action="/registrar_carro" method="post">
+        <div class="row">
+          <h4>Cadastrar Carros</h4>
+          <div class="input-group input-group-icon">
+            <input
+              type="text"
+              id="placa"
+              name="placa"
+              placeholder="Placa"
+              required
+            />
+            <div class="input-icon"><i class="fa-solid fa-car-rear"></i></div>
+          </div>
+          <div class="input-group input-group-icon">
+            <input
+              type="text"
+              id="marca"
+              name="marca"
+              placeholder="Marca"
+              required
+            />
+            <div class="input-icon">
+              <i class="fa-solid fa-magnifying-glass"></i>
             </div>
-
-            <div class="row">
-                <div class="col-half">
-                    <h4>Outras opções disponíveis:</h4>
-                    <div class="button-group">
-                        <button id="alterar" class="btn-option">Alterar</button>
-                        <button id="remover" class="btn-option" onclick="excluirCarro()">Remover</button>
-                        <!-- CRIAR DELETE -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <h4>Informações gerais:</h4>
-                <div class="button-group">
-                    <button id="exibir-carros" class="btn-option">
-                        <span><i class="fa-solid fa-car"></i> Exibir carros registrados</span>
-                    </button>
-                    <button id="exibir-vagas" class="btn-option">
-                        <span><i cla ss="fa-solid fa-map"></i> Exibir vagas disponíveis</span>
-                    </button>
-                </div>
-            </div>
-        </form>
-
-        <div id="tabelaCarros" style="display: none;">
-            <h4>Carros Registrados</h4>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Placa</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Ano</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for carro in carros %}
-                    <tr>
-                        <td>{{ carro[1] }}</td>
-                        <td>{{ carro[2] }}</td>  
-                        <td>{{ carro[3] }}</td>  
-                        <td>{{ carro[4] }}</td> 
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+          </div>
+          <div class="input-group input-group-icon">
+            <input
+              type="text"
+              id="modelo"
+              name="modelo"
+              placeholder="Modelo"
+              required
+            />
+            <div class="input-icon"><i class="fa-solid fa-tags"></i></div>
+          </div>
+          <div class="input-group input-group-icon">
+            <input
+              type="number"
+              id="ano"
+              name="ano"
+              placeholder="Ano"
+              min="1900"
+              max="2023"
+              required
+            />
+            <div class="input-icon"><i class="fa-solid fa-calendar"></i></div>
+          </div>
+          <button type="submit" class="btn-option">Enviar</button>
         </div>
+
+        <div class="row">
+          <h4>Informações gerais:</h4>
+          <div class="button-group">
+            <button id="exibir-carros" class="btn-option">
+              <span
+                ><i class="fa-solid fa-car"></i> Exibir carros registrados</span
+              >
+            </button>
+            <button id="exibir-vagas" class="btn-option">
+              <span
+                ><i cla ss="fa-solid fa-map"></i> Exibir vagas disponíveis</span
+              >
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div id="tabelaCarros" style="display: none">
+        <h4>Carros Registrados</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Placa</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Ano</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for carro in carros %}
+            <tr>
+              <td>{{ carro[1] }}</td>
+              <td>{{ carro[2] }}</td>
+              <td>{{ carro[3] }}</td>
+              <td>{{ carro[4] }}</td>
+              <td>
+                <button class="btn-option remover" data-id="{{ carro[0] }}">
+                  Remover
+                </button>
+              </td>
+              <td>
+                <button id="alterar" class="btn-option">Alterar</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-    
+
     <script>
-        document.getElementById('exibir-carros').addEventListener('click', function(event) {
-            event.preventDefault(); 
-            var tabela = document.getElementById('tabelaCarros');
-            if (tabela.style.display === 'none') {
-                tabela.style.display = 'block';  
-            } else {
-                tabela.style.display = 'none';  
-            }
+      document
+        .getElementById("exibir-carros")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          var tabela = document.getElementById("tabelaCarros");
+          if (tabela.style.display === "none") {
+            tabela.style.display = "block";
+          } else {
+            tabela.style.display = "none";
+          }
         });
 
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".remover").forEach((button) => {
+          button.addEventListener("click", function () {
+            let idCarro = this.getAttribute("data-id");
 
-        document.getElementById('remover').addEventListener('click', function(event){
-            function excluirCarro(){
-                fetch('/deletar_carro', {
-                    method: 'POST'
+            if (
+              confirm(
+                `Tem certeza que deseja excluir o carro com ID ${idCarro}?`
+              )
+            ) {
+              fetch("/deletar_carro", {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: idCarro }),
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  alert(data.mensagem);
+                  location.reload();
                 })
-                .then(response => response.json())
-                .then(data => alert(data.mensagem))
-                .catch(error => console.error('Erro:', error));
+                .catch((error) => console.error("Erro:", error));
             }
+          });
         });
-        
+      });
     </script>
-</body>
+  </body>
 </html>
