@@ -78,18 +78,28 @@ def exibir_carro():
 
     return render_template('index.html', carros=carros)
 
-@app.route('/deletar_carro', methods=['DEL'])
 def deletar_carro():
-    conectar = conectar_db()
-    cursor = conectar.cursor()
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
 
-    cursor.execute("DELETE FROM carro WHERE id = (?)';")
-    carros = cursor.fetchall()  
+        cursor.execute("DELETE FROM carro WHERE id = (?)';")
+        carros = cursor.fetchall()  
 
-    conectar.close()
+        conectar.close()
 
-    return render_template('index.html', carros=carros)
+        return "Dados excluídos com sucesso!"
 
+    except Exception as e:
+
+        return f"Erro ao excluir dados: {e}"
+
+    #return render_template('index.html', carros=carros)
+
+@app.route('/deletar_carro', methods=['DEL'])
+def excluir():
+    mensagem = deletar_carro()
+    return jsonify({'mensagem': mensagem})
 
 if __name__ == '__main__':
     criar_tabela()

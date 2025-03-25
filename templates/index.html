@@ -38,7 +38,7 @@
                     <h4>Outras opções disponíveis:</h4>
                     <div class="button-group">
                         <button id="alterar" class="btn-option">Alterar</button>
-                        <button id="remover" class="btn-option">Remover</button>
+                        <button id="remover" class="btn-option" onclick="excluirCarro()">Remover</button>
                         <!-- CRIAR DELETE -->
                     </div>
                 </div>
@@ -51,7 +51,7 @@
                         <span><i class="fa-solid fa-car"></i> Exibir carros registrados</span>
                     </button>
                     <button id="exibir-vagas" class="btn-option">
-                        <span><i class="fa-solid fa-map"></i> Exibir vagas disponíveis</span>
+                        <span><i cla ss="fa-solid fa-map"></i> Exibir vagas disponíveis</span>
                     </button>
                 </div>
             </div>
@@ -92,6 +92,19 @@
                 tabela.style.display = 'none';  
             }
         });
+
+
+        document.getElementById('remover').addEventListener('click', function(event){
+            function excluirCarro(){
+                fetch('/deletar_carro', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => alert(data.mensagem))
+                .catch(error => console.error('Erro:', error));
+            }
+        });
+        
     </script>
 </body>
 </html>
