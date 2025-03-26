@@ -92,6 +92,26 @@ def deletar_carro(id_carro):
 
     except Exception as e:
         return f"Erro ao excluir carro: {e}"
+    
+def alterar_carro(id_carro, placa, marca, modelo, ano):
+
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
+
+        cursor.execute(
+            "UPDATE carro SET placa = ?, marca = ?, modelo = ?, ano = ? WHERE id = ?",
+            (placa, marca, modelo, ano, id_carro)
+        )
+
+        conectar.commit()  
+
+        conectar.close()
+
+        return "Carro alterado com sucesso!"
+
+    except Exception as e:
+        return f"Erro ao alterar o carro: {e}"
 
 
 @app.route('/deletar_carro', methods=['DELETE'])
@@ -103,6 +123,22 @@ def excluir():
         return jsonify({'mensagem': 'Erro: ID do carro não fornecido'}), 400
 
     mensagem = deletar_carro(id_carro)
+    return jsonify({'mensagem': mensagem})
+
+@app.route('/alterar_carro', methods=['PUT'])
+def alterar():
+    dados = request.get_json()
+    
+    id_carro = dados.get('id')
+    placa = dados.get('placa')
+    marca = dados.get('marca')
+    modelo = dados.get('modelo')
+    ano = dados.get('ano')
+
+    if not all([id_carro, placa, marca, modelo, ano]):
+        return jsonify({'mensagem': 'Erro: Dados incompletos para alteração'}), 400
+
+    mensagem = alterar_carro(id_carro, placa, marca, modelo, ano)
     return jsonify({'mensagem': mensagem})
 
 
