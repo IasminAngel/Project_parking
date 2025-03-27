@@ -53,6 +53,7 @@
 
     <div id="tabelaCarros" style="display: none">
       <h4>Carros Registrados</h4>
+      <h5>Para "Editar" apenas clique em cima da coluna desejada e aperte em salvar para manter as alterações, para "Remover", clique no botão e escolha qual deverá excluir:</h5>
       <table>
         <thead>
           <tr>
@@ -65,26 +66,25 @@
         <tbody>
           {% for carro in carros %}
           <tr>
-            <td>{{ carro[1] }}</td>
-            <td>{{ carro[2] }}</td>
-            <td>{{ carro[3] }}</td>
-            <td>{{ carro[4] }}</td>
-            <td>
-              <button class="btn-option remover" data-id="{{ carro[0] }}">
-                Remover
-              </button>
-            </td>
-            <td>
-              <button class="btn-option remover" data-id="{{ carro[0] }}">Remover</button>
-              <button class="btn-option alterar" data-id="{{ carro[0] }}" data-placa="{{ carro[1] }}"
-                data-marca="{{ carro[2] }}" data-modelo="{{ carro[3] }}" data-ano="{{ carro[4] }}">Alterar</button>
-            </td>
+            <form method="post" action="/atualizar_carro" class="form-edicao">
+              <input type="hidden" name="id" value="{{ carro[0] }}">
+              <td><input type="text" name="placa" value="{{ carro[1] }}" required></td>
+              <td><input type="text" name="marca" value="{{ carro[2] }}" required></td>
+              <td><input type="text" name="modelo" value="{{ carro[3] }}" required></td>
+              <td>
+                <input type="number" name="ano" value="{{ carro[4] }}" min="1900" max="{{ datetime.now().year }}"
+                  required>
+              </td>
+              <button type="submit" class="btn-option">Salvar</button>
+              <button type="button" class="btn-option btn-remover" data-id="{{ carro[0] }}">Remover</button>
+              </td>
+            </form>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    
+
     <div id="formEdicao" style="display: none;">
       <h4>Editar Carro</h4>
       <form id="formAlterar">
@@ -108,4 +108,5 @@
   </div>
 </body>
 <script src="/static/js/script.js"></script>
+
 </html>

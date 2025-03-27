@@ -33,7 +33,7 @@ def index():
     cursor.execute("SELECT * FROM carro")
     carros = cursor.fetchall()
     conectar.close()
-    return render_template('index.html', carros=carros)
+    return render_template('index.html', carros=carros, datetime=datetime)
 
 @app.route('/registrar_carro', methods=['POST'])
 def adicionar_carro():
@@ -125,21 +125,55 @@ def excluir():
     mensagem = deletar_carro(id_carro)
     return jsonify({'mensagem': mensagem})
 
-@app.route('/alterar_carro', methods=['PUT'])
-def alterar():
-    dados = request.get_json()
-    
-    id_carro = dados.get('id')
-    placa = dados.get('placa')
-    marca = dados.get('marca')
-    modelo = dados.get('modelo')
-    ano = dados.get('ano')
+@app.route('/atualizar_carro', methods=['POST'])
+def atualizar_carro():
+    try:
+        # Recebe os dados do formulário tradicional (não JSON)
+        id_carro = request.form.get('id')
+        placa = request.form.get('placa')
+        marca = request.form.get('marca')
+        modelo = request.form.get('modelo')
+        ano = request.form.get('ano')
 
-    if not all([id_carro, placa, marca, modelo, ano]):
-        return jsonify({'mensagem': 'Erro: Dados incompletos para alteração'}), 400
+        if not all([id_carro, placa, marca, modelo, ano]):
+            flash('Todos os campos são obrigatórios!', 'error')
+            return redirect(url_for('index'))
 
-    mensagem = alterar_carro(id_carro, placa, marca, modelo, ano)
-    return jsonify({'mensagem': mensagem})
+        try:
+            ano = int(ano)
+            if ano < 1900 or ano > datetime.now().year:
+                flash('Ano inválido!', 'error')
+                return redirect(url_for('index'))
+        except ValueError:
+            flash('Ano deve ser um número válido!', 'error')
+            return redirect(url_for('index'))
+
+        conn = conectar_db()
+        cursor = conn.cursor()
+        
+        # Verifica se a placa já existe em outro veículo
+        cursor.execute("SELECT id FROM carro WHERE placa = ? AND id != ?", (placa, id_carro))
+        if cursor.fetchone():
+            flash('Esta placa já está cadastrada em outro veículo!', 'error')
+            return redirect(url_for('index'))
+
+        # Atualiza o registro
+        cursor.execute(
+            "UPDATE carro SET placa=?, marca=?, modelo=?, ano=? WHERE id=?",
+            (placa, marca, modelo, ano, id_carro)
+        )
+        
+        conn.commit()
+        flash('Carro atualizado com sucesso!', 'success')
+        return redirect(url_for('index'))
+
+    except Exception as e:
+        print(f"Erro durante atualização: {str(e)}")
+        flash('Erro ao atualizar carro!', 'error')
+        return redirect(url_for('index'))
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 
 if __name__ == '__main__':

@@ -177,11 +177,17 @@ select option {
   border-color: #bd8200;
 }
 
+
 table {
   border-collapse: collapse;
   border: 1px solid;
   width: 50%;
+  margin-top: 20px;
   text-align: left;
+}
+
+.btn-option{
+  margin-top: 10px;
 }
 
 th{
@@ -192,10 +198,6 @@ td, th {
   border: 1px solid;
   height: 40px;
   vertical-align: bottom;
-}
-
-td button {
-  width: 20px;
 }
 
 .btn-option i {
