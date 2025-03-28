@@ -75,8 +75,11 @@
                 <input type="number" name="ano" value="{{ carro[4] }}" min="1900" max="{{ datetime.now().year }}"
                   required>
               </td>
-              <button type="submit" class="btn-option">Salvar</button>
-              <button type="button" class="btn-option btn-remover" data-id="{{ carro[0] }}">Remover</button>
+              <td class="action-buttons">
+                <button type="submit" class="btn-small btn-save"><i class="fa fa-save"></i></button>
+                
+                <button type="button" class="btn-small btn-remove btn-remover" data-id="{{ carro[0] }}"><i class="fa fa-trash"></i></button>
+                
               </td>
             </form>
           </tr>
