@@ -1,35 +1,52 @@
 document.addEventListener("DOMContentLoaded", function () {
-  document
-    .getElementById("exibir-carros")
-    .addEventListener("click", function (event) {
-      event.preventDefault();
-      var tabela = document.getElementById("tabelaCarros");
-      tabela.style.display = tabela.style.display === "none" ? "block" : "none";
-    });
+  document.getElementById("exibir-carros").addEventListener("click", function (e) {
+    e.preventDefault();
+    const tabela = document.getElementbela.style.display === "none" ? "block" : "none";
+  });
 
-  document.querySelectorAll(".btn-remover").forEach((button) => {
-    button.addEventListener("click", function () {
-      let idCarro = this.getAttribute("data-id");
-      if (
-        confirm(`Tem certeza que deseja excluir o carro com ID ${idCarro}?`)
-      ) {
+  document.querySelectorAll(".btn-remover").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const idCarro = this.getAttribute("data-id");
+      if (confirm("Tem certeza que deseja remover este carro?")) {
         fetch("/deletar_carro", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ id: idCarro }),
+          body: JSON.stringify({ id: idCarro })
         })
-          .then((response) => response.json())
-          .then((data) => {
+          .then(response => response.json())
+          .then(data => {
             alert(data.mensagem);
-            location.reload();
+            window.location.reload();
           })
-          .catch((error) => {
-            console.error("Erro:", error);
+          .catch(error => {
+            console.error("Error:", error);
             alert("Erro ao remover carro");
           });
       }
+    });
+
+    // Validação de formulários
+    document.querySelectorAll("form").forEach(form => {
+      form.addEventListener("submit", function (e) {
+        const inputs = this.querySelectorAll("input[required]");
+        let isValid = true;
+
+        inputs.forEach(input => {
+          if (!input.value.trim()) {
+            isValid = false;
+            input.style.border = "1px solid red";
+          } else {
+            input.style.border = "";
+          }
+        });
+
+        if (!isValid) {
+          e.preventDefault();
+          alert("Preencha todos os campos obrigatórios!");
+        }
+      });
     });
   });
 
@@ -148,70 +165,64 @@ document
     }
   });
 
-  // Mostrar/ocultar tabela de carros
-document.getElementById('exibir-carros').addEventListener('click', function(e) {
+document.getElementById('exibir-carros').addEventListener('click', function (e) {
   e.preventDefault();
   const tabela = document.getElementById('tabelaCarros');
   tabela.style.display = tabela.style.display === 'none' ? 'block' : 'none';
 });
 
-// Event listeners para botões de remoção
 document.querySelectorAll('.btn-remover').forEach(btn => {
-  btn.addEventListener('click', function() {
-      const idCarro = this.getAttribute('data-id');
-      if (confirm('Tem certeza que deseja remover este carro?')) {
-          fetch('/deletar_carro', {
-              method: 'DELETE',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ id: idCarro })
-          })
-          .then(response => response.json())
-          .then(data => {
-              alert(data.mensagem);
-              window.location.reload();
-          })
-          .catch(error => {
-              console.error('Error:', error);
-              alert('Erro ao remover carro');
-          });
-      }
+  btn.addEventListener('click', function () {
+    const idCarro = this.getAttribute('data-id');
+    if (confirm('Tem certeza que deseja remover este carro?')) {
+      fetch('/deletar_carro', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: idCarro })
+      })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.mensagem);
+          window.location.reload();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Erro ao remover carro');
+        });
+    }
   });
 });
 
-// Validação de formulário de entrada
-document.querySelector('form[action="/registrar_entrada"]').addEventListener('submit', function(e) {
+document.querySelector('form[action="/registrar_entrada"]').addEventListener('submit', function (e) {
   const placa = this.querySelector('input[name="placa"]').value.trim();
   if (!placa) {
-      e.preventDefault();
-      alert('Por favor, informe a placa do carro');
+    e.preventDefault();
+    alert('Por favor, informe a placa do carro');
   }
 });
 
-// Validação de formulário de saída
-// Verificar todos os formulários de saída
 document.querySelectorAll('form[action="/registrar_saida"]').forEach(form => {
-  form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      if (confirm('Confirmar saída do veículo?')) {
-          // Cria um formulário temporário para submeter os dados
-          const formData = new FormData(this);
-          
-          fetch(this.action, {
-              method: 'POST',
-              body: formData
-          })
-          .then(response => {
-              if (response.redirected) {
-                  window.location.href = response.url;
-              }
-          })
-          .catch(error => {
-              console.error('Error:', error);
-              alert('Erro ao registrar saída');
-          });
-      }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    if (confirm('Confirmar saída do veículo?')) {
+      const formData = new FormData(this);
+
+      fetch(this.action, {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => {
+          if (response.redirected) {
+            window.location.href = response.url;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Erro ao registrar saída');
+        });
+    }
   });
 });

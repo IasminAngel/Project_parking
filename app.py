@@ -204,16 +204,14 @@ def gerenciar_vagas():
     conectar = conectar_db()
     cursor = conectar.cursor()
     
-    # Buscar todas as vagas
     cursor.execute("SELECT * FROM vaga")
     vagas = cursor.fetchall()
     
-    # Buscar carros não estacionados
-    cursor.execute("SELECT * FROM carro WHERE vaga_id IS NULL")
-    carros_disponiveis = cursor.fetchall()
+    cursor.execute("SELECT * FROM carro")
+    carros = cursor.fetchall()
     
     conectar.close()
-    return render_template('gerenciar_vagas.html', vagas=vagas, carros_disponiveis=carros_disponiveis, datetime=datetime)
+    return render_template('gerenciar_vagas.html', vagas=vagas, carros=carros, datetime=datetime)
 
 @app.route('/criar_vagas', methods=['POST'])
 def criar_vagas():
@@ -224,11 +222,9 @@ def criar_vagas():
             conectar = conectar_db()
             cursor = conectar.cursor()
             
-            # Encontrar o maior número de vaga atual
             cursor.execute("SELECT MAX(numero) FROM vaga")
             max_numero = cursor.fetchone()[0] or 0
             
-            # Inserir novas vagas
             for i in range(1, quantidade + 1):
                 cursor.execute(
                     "INSERT INTO vaga (numero, status) VALUES (?, ?)",
@@ -256,7 +252,6 @@ def reservar_vaga():
             conectar = conectar_db()
             cursor = conectar.cursor()
             
-            # Verificar se a vaga está disponível
             cursor.execute("SELECT status FROM vaga WHERE id = ?", (vaga_id,))
             status = cursor.fetchone()[0]
             
@@ -264,13 +259,11 @@ def reservar_vaga():
                 flash('Vaga não está disponível para reserva!', 'error')
                 return redirect(url_for('gerenciar_vagas'))
             
-            # Atualizar vaga para reservada
             cursor.execute(
                 "UPDATE vaga SET status = 'reservada', carro_id = ? WHERE id = ?",
                 (carro_id, vaga_id)
             )
             
-            # Atualizar carro com a vaga reservada
             cursor.execute(
                 "UPDATE carro SET vaga_id = ? WHERE id = ?",
                 (vaga_id, carro_id)
@@ -296,7 +289,6 @@ def registrar_entrada():
             conectar = conectar_db()
             cursor = conectar.cursor()
             
-            # Buscar carro
             cursor.execute("SELECT id, vaga_id FROM carro WHERE placa = ?", (placa,))
             carro = cursor.fetchone()
             
@@ -307,21 +299,18 @@ def registrar_entrada():
             carro_id, vaga_id = carro
             
             if vaga_id:
-                # Verificar se já está ocupada
                 cursor.execute("SELECT status FROM vaga WHERE id = ?", (vaga_id,))
                 status = cursor.fetchone()[0]
                 
                 if status == 'ocupada':
                     flash('Carro já está estacionado!', 'error')
                     return redirect(url_for('gerenciar_vagas'))
-                
-                # Atualizar vaga para ocupada
+            
                 cursor.execute(
                     "UPDATE vaga SET status = 'ocupada' WHERE id = ?",
                     (vaga_id,)
                 )
             else:
-                # Buscar primeira vaga disponível
                 cursor.execute(
                     "SELECT id FROM vaga WHERE status = 'disponível' LIMIT 1"
                 )
@@ -333,7 +322,6 @@ def registrar_entrada():
                 
                 vaga_id = vaga[0]
                 
-                # Atualizar vaga e carro
                 cursor.execute(
                     "UPDATE vaga SET status = 'ocupada', carro_id = ? WHERE id = ?",
                     (carro_id, vaga_id)
@@ -343,7 +331,6 @@ def registrar_entrada():
                     (vaga_id, carro_id)
                 )
             
-            # Registrar entrada no histórico
             cursor.execute(
                 "INSERT INTO historico (carro_id, vaga_id, entrada) VALUES (?, ?, ?)",
                 (carro_id, vaga_id, datetime.now())
@@ -367,67 +354,50 @@ def registrar_saida():
     if not placa:
         flash('Placa não informada!', 'error')
         return redirect(url_for('gerenciar_vagas'))
-    
+
     try:
-        conectar = conectar_db()
-        cursor = conectar.cursor()
+        conn = conectar_db()
+        cursor = conn.cursor()
         
-        # 1. Buscar o carro pela placa
-        cursor.execute("SELECT id, vaga_id FROM carro WHERE placa = ?", (placa,))
+        cursor.execute("""
+            SELECT carro.id, carro.vaga_id 
+            FROM carro 
+            WHERE placa = ? AND vaga_id IS NOT NULL
+        """, (placa,))
         carro = cursor.fetchone()
         
         if not carro:
-            flash('Carro não encontrado!', 'error')
+            flash('Carro não encontrado ou não está estacionado!', 'error')
             return redirect(url_for('gerenciar_vagas'))
         
         carro_id, vaga_id = carro
         
-        if not vaga_id:
-            flash('Este carro não está estacionado!', 'error')
-            return redirect(url_for('gerenciar_vagas'))
+        cursor.execute("""
+            UPDATE vaga 
+            SET status = 'disponível', carro_id = NULL 
+            WHERE id = ? AND carro_id = ?
+        """, (vaga_id, carro_id))
         
-        # 2. Verificar se a vaga está realmente ocupada por este carro
-        cursor.execute(
-            "SELECT id FROM vaga WHERE id = ? AND carro_id = ? AND status = 'ocupada'",
-            (vaga_id, carro_id)
-        )
-        vaga_valida = cursor.fetchone()
+        cursor.execute("""
+            UPDATE carro 
+            SET vaga_id = NULL 
+            WHERE id = ?
+        """, (carro_id,))
         
-        if not vaga_valida:
-            flash('Esta vaga não está ocupada por este carro!', 'error')
-            return redirect(url_for('gerenciar_vagas'))
+        cursor.execute("""
+            UPDATE historico 
+            SET saida = datetime('now') 
+            WHERE carro_id = ? AND vaga_id = ? AND saida IS NULL
+        """, (carro_id, vaga_id))
         
-        # 3. Atualizar a vaga para disponível
-        cursor.execute(
-            "UPDATE vaga SET status = 'disponível', carro_id = NULL WHERE id = ?",
-            (vaga_id,)
-        )
-        
-        # 4. Atualizar o carro para remover a referência da vaga
-        cursor.execute(
-            "UPDATE carro SET vaga_id = NULL WHERE id = ?",
-            (carro_id,)
-        )
-        
-        # 5. Atualizar o registro no histórico
-        cursor.execute(
-            """UPDATE historico 
-            SET saida = ? 
-            WHERE carro_id = ? AND vaga_id = ? AND saida IS NULL""",
-            (datetime.now(), carro_id, vaga_id)
-        )
-        
-        conectar.commit()
+        conn.commit()
         flash('Saída registrada com sucesso!', 'success')
         
-    except sqlite3.Error as e:
-        conectar.rollback()
-        flash(f'Erro no banco de dados ao registrar saída: {str(e)}', 'error')
     except Exception as e:
+        conn.rollback()
         flash(f'Erro ao registrar saída: {str(e)}', 'error')
     finally:
-        if 'conectar' in locals():
-            conectar.close()
+        conn.close()
     
     return redirect(url_for('gerenciar_vagas'))
 
@@ -479,22 +449,17 @@ def relatorio_ocupacao():
         conectar = conectar_db()
         cursor = conectar.cursor()
         
-        # Total de vagas
         cursor.execute("SELECT COUNT(*) FROM vaga")
         total_vagas = cursor.fetchone()[0]
         
-        # Vagas ocupadas
         cursor.execute("SELECT COUNT(*) FROM vaga WHERE status = 'ocupada'")
         ocupadas = cursor.fetchone()[0]
-        
-        # Vagas reservadas
+       
         cursor.execute("SELECT COUNT(*) FROM vaga WHERE status = 'reservada'")
         reservadas = cursor.fetchone()[0]
         
-        # Vagas disponíveis
         disponiveis = total_vagas - ocupadas - reservadas
         
-        # Tempo médio de permanência
         cursor.execute("""
             SELECT AVG(JULIANDAY(saida) - JULIANDAY(entrada)) * 24 
             FROM historico 
@@ -514,7 +479,6 @@ def relatorio_ocupacao():
         return redirect(url_for('relatorios'))
     finally:
         conectar.close()
-
 
 
 if __name__ == '__main__':
