@@ -83,13 +83,12 @@ def adicionar_carro():
                            (placa, marca, modelo, ano))
             conectar.commit()
             
-            # Buscar TODOS os carros após inserção
             cursor.execute("SELECT * FROM carro")
             carros = cursor.fetchall()
             conectar.close()
             
             flash('Carro adicionado com sucesso!', 'success')
-            return render_template('index.html', carros=carros, datetime=datetime)  # Renderiza com os dados atualizados
+            return render_template('index.html', carros=carros, datetime=datetime)  
             
         except sqlite3.IntegrityError:
             flash('Erro: Placa já cadastrada!', 'error')
@@ -215,7 +214,6 @@ def gerenciar_vagas():
     cursor.execute("SELECT * FROM vaga")
     vagas = cursor.fetchall()
     
-    # Alteração importante: buscar TODOS os carros, não apenas os disponíveis
     cursor.execute("SELECT * FROM carro WHERE vaga_id IS NULL")
     carros_disponiveis = cursor.fetchall()
     cursor.execute("SELECT * FROM carro ")
@@ -226,7 +224,7 @@ def gerenciar_vagas():
     return render_template('gerenciar_vagas.html', 
                          vagas=vagas, 
                          todos_carros=todos_carros,
-                         carros_disponiveis= carros_disponiveis, # Envia todos os carros para o template
+                         carros_disponiveis= carros_disponiveis, 
                          datetime=datetime)
 
 
