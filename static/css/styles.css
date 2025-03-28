@@ -177,7 +177,6 @@ select option {
   border-color: #bd8200;
 }
 
-
 table {
   border-collapse: collapse;
   border: 1px solid;
@@ -186,18 +185,19 @@ table {
   text-align: left;
 }
 
-.btn-option{
+.btn-option {
   margin-top: 10px;
 }
 
-th{
+th {
   padding: 20px;
 }
 
-td, th {
+td,
+th {
   padding: 8px;
   text-align: left;
-  border-bottom: 1px solid #ddd;;
+  border-bottom: 1px solid #ddd;
 }
 
 .btn-option i {
@@ -228,7 +228,7 @@ td, th {
 }
 
 .btn-save {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
@@ -249,6 +249,66 @@ td, th {
   display: inline-block;
 }
 
+
+/* Estilos para gerenciamento de vagas */
+.stats-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 150px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.stat-card p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.stat-card.available {
+  background: #d4edda;
+}
+
+.stat-card.occupied {
+  background: #f8d7da;
+}
+
+.stat-card.reserved {
+  background: #fff3cd;
+}
+
+/* Estilos para formulários de relatórios */
+form .input-group {
+  margin-bottom: 1rem;
+}
+
+form .input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+form .input-group input[type="date"],
+form .input-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
 
 @media only screen and (max-width: 540px) {
   .col-half {

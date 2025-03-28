@@ -19,9 +19,36 @@ def criar_tabela():
             placa TEXT NOT NULL UNIQUE,
             marca TEXT NOT NULL,
             modelo TEXT NOT NULL,
-            ano INTEGER NOT NULL
+            ano INTEGER NOT NULL,
+            vaga_id INTEGER,
+            FOREIGN KEY (vaga_id) REFERENCES vaga(id)
         )
         '''
+    )
+    cursor.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS vaga (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            numero INTEGER NOT NULL UNIQUE,
+            status TEXT NOT NULL DEFAULT 'disponível',
+            carro_id INTEGER,
+            FOREIGN KEY (carro_id) REFERENCES carro(id)
+        )
+        '''
+     )
+    cursor.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS historico (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            carro_id INTEGER NOT NULL,
+            vaga_id INTEGER NOT NULL,
+            entrada DATETIME NOT NULL,
+            saida DATETIME,
+            FOREIGN KEY (carro_id) REFERENCES carro(id),
+            FOREIGN KEY (vaga_id) REFERENCES vaga(id)
+        )
+        '''
+    
     )
     conectar.commit()
     conectar.close()
@@ -128,7 +155,6 @@ def excluir():
 @app.route('/atualizar_carro', methods=['POST'])
 def atualizar_carro():
     try:
-        # Recebe os dados do formulário tradicional (não JSON)
         id_carro = request.form.get('id')
         placa = request.form.get('placa')
         marca = request.form.get('marca')
@@ -151,13 +177,11 @@ def atualizar_carro():
         conn = conectar_db()
         cursor = conn.cursor()
         
-        # Verifica se a placa já existe em outro veículo
         cursor.execute("SELECT id FROM carro WHERE placa = ? AND id != ?", (placa, id_carro))
         if cursor.fetchone():
             flash('Esta placa já está cadastrada em outro veículo!', 'error')
             return redirect(url_for('index'))
 
-        # Atualiza o registro
         cursor.execute(
             "UPDATE carro SET placa=?, marca=?, modelo=?, ano=? WHERE id=?",
             (placa, marca, modelo, ano, id_carro)
@@ -174,6 +198,323 @@ def atualizar_carro():
     finally:
         if 'conn' in locals():
             conn.close()
+
+@app.route('/gerenciar_vagas')
+def gerenciar_vagas():
+    conectar = conectar_db()
+    cursor = conectar.cursor()
+    
+    # Buscar todas as vagas
+    cursor.execute("SELECT * FROM vaga")
+    vagas = cursor.fetchall()
+    
+    # Buscar carros não estacionados
+    cursor.execute("SELECT * FROM carro WHERE vaga_id IS NULL")
+    carros_disponiveis = cursor.fetchall()
+    
+    conectar.close()
+    return render_template('gerenciar_vagas.html', vagas=vagas, carros_disponiveis=carros_disponiveis, datetime=datetime)
+
+@app.route('/criar_vagas', methods=['POST'])
+def criar_vagas():
+    quantidade = request.form.get('quantidade', type=int)
+    
+    if quantidade and quantidade > 0:
+        try:
+            conectar = conectar_db()
+            cursor = conectar.cursor()
+            
+            # Encontrar o maior número de vaga atual
+            cursor.execute("SELECT MAX(numero) FROM vaga")
+            max_numero = cursor.fetchone()[0] or 0
+            
+            # Inserir novas vagas
+            for i in range(1, quantidade + 1):
+                cursor.execute(
+                    "INSERT INTO vaga (numero, status) VALUES (?, ?)",
+                    (max_numero + i, 'disponível')
+                )
+            
+            conectar.commit()
+            flash(f'{quantidade} vagas criadas com sucesso!', 'success')
+        except Exception as e:
+            flash(f'Erro ao criar vagas: {str(e)}', 'error')
+        finally:
+            conectar.close()
+    else:
+        flash('Quantidade inválida!', 'error')
+    
+    return redirect(url_for('gerenciar_vagas'))
+
+@app.route('/reservar_vaga', methods=['POST'])
+def reservar_vaga():
+    vaga_id = request.form.get('vaga_id')
+    carro_id = request.form.get('carro_id')
+    
+    if vaga_id and carro_id:
+        try:
+            conectar = conectar_db()
+            cursor = conectar.cursor()
+            
+            # Verificar se a vaga está disponível
+            cursor.execute("SELECT status FROM vaga WHERE id = ?", (vaga_id,))
+            status = cursor.fetchone()[0]
+            
+            if status != 'disponível':
+                flash('Vaga não está disponível para reserva!', 'error')
+                return redirect(url_for('gerenciar_vagas'))
+            
+            # Atualizar vaga para reservada
+            cursor.execute(
+                "UPDATE vaga SET status = 'reservada', carro_id = ? WHERE id = ?",
+                (carro_id, vaga_id)
+            )
+            
+            # Atualizar carro com a vaga reservada
+            cursor.execute(
+                "UPDATE carro SET vaga_id = ? WHERE id = ?",
+                (vaga_id, carro_id)
+            )
+            
+            conectar.commit()
+            flash('Vaga reservada com sucesso!', 'success')
+        except Exception as e:
+            flash(f'Erro ao reservar vaga: {str(e)}', 'error')
+        finally:
+            conectar.close()
+    else:
+        flash('Dados incompletos para reserva!', 'error')
+    
+    return redirect(url_for('gerenciar_vagas'))
+
+@app.route('/registrar_entrada', methods=['POST'])
+def registrar_entrada():
+    placa = request.form.get('placa')
+    
+    if placa:
+        try:
+            conectar = conectar_db()
+            cursor = conectar.cursor()
+            
+            # Buscar carro
+            cursor.execute("SELECT id, vaga_id FROM carro WHERE placa = ?", (placa,))
+            carro = cursor.fetchone()
+            
+            if not carro:
+                flash('Carro não encontrado!', 'error')
+                return redirect(url_for('gerenciar_vagas'))
+            
+            carro_id, vaga_id = carro
+            
+            if vaga_id:
+                # Verificar se já está ocupada
+                cursor.execute("SELECT status FROM vaga WHERE id = ?", (vaga_id,))
+                status = cursor.fetchone()[0]
+                
+                if status == 'ocupada':
+                    flash('Carro já está estacionado!', 'error')
+                    return redirect(url_for('gerenciar_vagas'))
+                
+                # Atualizar vaga para ocupada
+                cursor.execute(
+                    "UPDATE vaga SET status = 'ocupada' WHERE id = ?",
+                    (vaga_id,)
+                )
+            else:
+                # Buscar primeira vaga disponível
+                cursor.execute(
+                    "SELECT id FROM vaga WHERE status = 'disponível' LIMIT 1"
+                )
+                vaga = cursor.fetchone()
+                
+                if not vaga:
+                    flash('Não há vagas disponíveis!', 'error')
+                    return redirect(url_for('gerenciar_vagas'))
+                
+                vaga_id = vaga[0]
+                
+                # Atualizar vaga e carro
+                cursor.execute(
+                    "UPDATE vaga SET status = 'ocupada', carro_id = ? WHERE id = ?",
+                    (carro_id, vaga_id)
+                )
+                cursor.execute(
+                    "UPDATE carro SET vaga_id = ? WHERE id = ?",
+                    (vaga_id, carro_id)
+                )
+            
+            # Registrar entrada no histórico
+            cursor.execute(
+                "INSERT INTO historico (carro_id, vaga_id, entrada) VALUES (?, ?, ?)",
+                (carro_id, vaga_id, datetime.now())
+            )
+            
+            conectar.commit()
+            flash('Entrada registrada com sucesso!', 'success')
+        except Exception as e:
+            flash(f'Erro ao registrar entrada: {str(e)}', 'error')
+        finally:
+            conectar.close()
+    else:
+        flash('Placa não informada!', 'error')
+    
+    return redirect(url_for('gerenciar_vagas'))
+
+@app.route('/registrar_saida', methods=['POST'])
+def registrar_saida():
+    placa = request.form.get('placa')
+    
+    if not placa:
+        flash('Placa não informada!', 'error')
+        return redirect(url_for('gerenciar_vagas'))
+    
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
+        
+        # 1. Buscar o carro pela placa
+        cursor.execute("SELECT id, vaga_id FROM carro WHERE placa = ?", (placa,))
+        carro = cursor.fetchone()
+        
+        if not carro:
+            flash('Carro não encontrado!', 'error')
+            return redirect(url_for('gerenciar_vagas'))
+        
+        carro_id, vaga_id = carro
+        
+        if not vaga_id:
+            flash('Este carro não está estacionado!', 'error')
+            return redirect(url_for('gerenciar_vagas'))
+        
+        # 2. Verificar se a vaga está realmente ocupada por este carro
+        cursor.execute(
+            "SELECT id FROM vaga WHERE id = ? AND carro_id = ? AND status = 'ocupada'",
+            (vaga_id, carro_id)
+        )
+        vaga_valida = cursor.fetchone()
+        
+        if not vaga_valida:
+            flash('Esta vaga não está ocupada por este carro!', 'error')
+            return redirect(url_for('gerenciar_vagas'))
+        
+        # 3. Atualizar a vaga para disponível
+        cursor.execute(
+            "UPDATE vaga SET status = 'disponível', carro_id = NULL WHERE id = ?",
+            (vaga_id,)
+        )
+        
+        # 4. Atualizar o carro para remover a referência da vaga
+        cursor.execute(
+            "UPDATE carro SET vaga_id = NULL WHERE id = ?",
+            (carro_id,)
+        )
+        
+        # 5. Atualizar o registro no histórico
+        cursor.execute(
+            """UPDATE historico 
+            SET saida = ? 
+            WHERE carro_id = ? AND vaga_id = ? AND saida IS NULL""",
+            (datetime.now(), carro_id, vaga_id)
+        )
+        
+        conectar.commit()
+        flash('Saída registrada com sucesso!', 'success')
+        
+    except sqlite3.Error as e:
+        conectar.rollback()
+        flash(f'Erro no banco de dados ao registrar saída: {str(e)}', 'error')
+    except Exception as e:
+        flash(f'Erro ao registrar saída: {str(e)}', 'error')
+    finally:
+        if 'conectar' in locals():
+            conectar.close()
+    
+    return redirect(url_for('gerenciar_vagas'))
+
+@app.route('/relatorios')
+def relatorios():
+    return render_template('relatorios.html')
+
+@app.route('/relatorio_entradas_saidas')
+def relatorio_entradas_saidas():
+    data_inicio = request.args.get('data_inicio')
+    data_fim = request.args.get('data_fim')
+    
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
+        
+        query = """
+            SELECT h.entrada, h.saida, c.placa, c.marca, c.modelo, v.numero
+            FROM historico h
+            JOIN carro c ON h.carro_id = c.id
+            JOIN vaga v ON h.vaga_id = v.id
+        """
+        
+        params = []
+        
+        if data_inicio and data_fim:
+            query += " WHERE h.entrada BETWEEN ? AND ?"
+            params.extend([data_inicio, data_fim])
+        
+        query += " ORDER BY h.entrada DESC"
+        
+        cursor.execute(query, params)
+        registros = cursor.fetchall()
+        
+        return render_template('relatorio_entradas_saidas.html', 
+                            registros=registros,
+                            data_inicio=data_inicio,
+                            data_fim=data_fim)
+    
+    except Exception as e:
+        flash(f'Erro ao gerar relatório: {str(e)}', 'error')
+        return redirect(url_for('relatorios'))
+    finally:
+        conectar.close()
+
+@app.route('/relatorio_ocupacao')
+def relatorio_ocupacao():
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
+        
+        # Total de vagas
+        cursor.execute("SELECT COUNT(*) FROM vaga")
+        total_vagas = cursor.fetchone()[0]
+        
+        # Vagas ocupadas
+        cursor.execute("SELECT COUNT(*) FROM vaga WHERE status = 'ocupada'")
+        ocupadas = cursor.fetchone()[0]
+        
+        # Vagas reservadas
+        cursor.execute("SELECT COUNT(*) FROM vaga WHERE status = 'reservada'")
+        reservadas = cursor.fetchone()[0]
+        
+        # Vagas disponíveis
+        disponiveis = total_vagas - ocupadas - reservadas
+        
+        # Tempo médio de permanência
+        cursor.execute("""
+            SELECT AVG(JULIANDAY(saida) - JULIANDAY(entrada)) * 24 
+            FROM historico 
+            WHERE saida IS NOT NULL
+        """)
+        tempo_medio_horas = cursor.fetchone()[0] or 0
+        
+        return render_template('relatorio_ocupacao.html',
+                            total_vagas=total_vagas,
+                            ocupadas=ocupadas,
+                            reservadas=reservadas,
+                            disponiveis=disponiveis,
+                            tempo_medio_horas=round(tempo_medio_horas, 2))
+    
+    except Exception as e:
+        flash(f'Erro ao gerar relatório: {str(e)}', 'error')
+        return redirect(url_for('relatorios'))
+    finally:
+        conectar.close()
+
 
 
 if __name__ == '__main__':
