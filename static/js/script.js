@@ -1,63 +1,33 @@
-document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById("exibir-carros").addEventListener("click", function (e) {
-    e.preventDefault();
-    const tabela = document.getElementbela.style.display === "none" ? "block" : "none";
-  });
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      const inputs = this.querySelectorAll("input[required]");
+      let isValid = true;
 
-  document.querySelectorAll(".btn-remover").forEach(btn => {
-    btn.addEventListener("click", function () {
-      const idCarro = this.getAttribute("data-id");
-      if (confirm("Tem certeza que deseja remover este carro?")) {
-        fetch("/deletar_carro", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id: idCarro })
-        })
-          .then(response => response.json())
-          .then(data => {
-            alert(data.mensagem);
-            window.location.reload();
-          })
-          .catch(error => {
-            console.error("Error:", error);
-            alert("Erro ao remover carro");
-          });
-      }
-    });
-
-    // Validação de formulários
-    document.querySelectorAll("form").forEach(form => {
-      form.addEventListener("submit", function (e) {
-        const inputs = this.querySelectorAll("input[required]");
-        let isValid = true;
-
-        inputs.forEach(input => {
-          if (!input.value.trim()) {
-            isValid = false;
-            input.style.border = "1px solid red";
-          } else {
-            input.style.border = "";
-          }
-        });
-
-        if (!isValid) {
-          e.preventDefault();
-          alert("Preencha todos os campos obrigatórios!");
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
+          isValid = false;
+          input.style.border = "1px solid red";
+        } else {
+          input.style.border = "";
         }
       });
-    });
-  });
 
-  document.querySelectorAll(".form-edicao").forEach((form) => {
-    form.addEventListener("submit", function (event) {
-      const ano = this.querySelector("input[name='ano']").value;
-      if (ano < 1900 || ano > new Date().getFullYear()) {
-        event.preventDefault();
-        alert("Ano inválido! Digite um ano entre 1900 e o ano atual.");
+      if (!isValid) {
+        e.preventDefault();
+        alert("Preencha todos os campos obrigatórios!");
       }
     });
+  });
+});
+
+document.querySelectorAll(".form-edicao").forEach((form) => {
+  form.addEventListener("submit", function (event) {
+    const ano = this.querySelector("input[name='ano']").value;
+    if (ano < 1900 || ano > new Date().getFullYear()) {
+      event.preventDefault();
+      alert("Ano inválido! Digite um ano entre 1900 e o ano atual.");
+    }
   });
 });
 
@@ -225,4 +195,20 @@ document.querySelectorAll('form[action="/registrar_saida"]').forEach(form => {
         });
     }
   });
+});
+
+function atualizarListaCarros() {
+  fetch('/exibir_carro')
+    .then(response => response.text())
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const novaTabela = doc.getElementById('tabelaCarros');
+      document.getElementById('tabelaCarros').replaceWith(novaTabela);
+    })
+    .catch(error => console.error('Erro:', error));
+}
+
+document.querySelector('form[action="/registrar_carro"]').addEventListener('submit', function () {
+  setTimeout(atualizarListaCarros, 500);
 });
